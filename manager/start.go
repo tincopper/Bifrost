@@ -16,24 +16,22 @@ limitations under the License.
 package manager
 
 import (
-	"net/http"
 	"encoding/json"
-	"strconv"
-	"github.com/brokercap/Bifrost/manager/xgo"
 	"github.com/brokercap/Bifrost/config"
-	"os/exec"
-	"os"
-	"path/filepath"
-	"strings"
-	"runtime/debug"
+	"github.com/brokercap/Bifrost/manager/xgo"
 	"log"
+	"net/http"
+	"runtime/debug"
+	"strconv"
+	"strings"
 )
 
 var execDir string
 
 func init(){
-	execPath, _ := exec.LookPath(os.Args[0])
-	execDir = filepath.Dir(execPath)+"/"
+	//execPath, _ := exec.LookPath(os.Args[0])
+	//execDir = filepath.Dir(execPath)+"/"
+	execDir = "./"
 }
 
 func TemplatePath(fileName string) string{

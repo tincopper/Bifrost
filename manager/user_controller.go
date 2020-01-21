@@ -16,36 +16,35 @@ limitations under the License.
 package manager
 
 import (
-	"net/http"
-	"html/template"
-
-	"github.com/brokercap/Bifrost/server/user"
 	"encoding/json"
+	"github.com/brokercap/Bifrost/server/user"
+	"html/template"
+	"net/http"
 )
 
 func init()  {
-	addRoute("/login",user_login)
-	addRoute("/dologin",user_do_login)
-	addRoute("/logout",user_logout)
+	addRoute("/login", userLogin)
+	addRoute("/dologin", userDoLogin)
+	addRoute("/logout", userLogout)
 
-	addRoute("/user/update",update_user_controller)
-	addRoute("/user/del",del_user_controller)
-	addRoute("/user/list",list_user_controller)
+	addRoute("/user/update", updateUserController)
+	addRoute("/user/del", delUserController)
+	addRoute("/user/list", listUserController)
 }
 
-func user_login(w http.ResponseWriter,req *http.Request){
+func userLogin(w http.ResponseWriter,req *http.Request){
 	data := TemplateHeader{Title:"Login - Bifrost"}
 	t, _ := template.ParseFiles(TemplatePath("manager/template/login.html"))
 	t.Execute(w, data)
 }
 
 
-func user_logout(w http.ResponseWriter,req *http.Request){
+func userLogout(w http.ResponseWriter,req *http.Request){
 	sessionMgr.EndSession(w, req) //用户退出时删除对应session
 	http.Redirect(w, req, "/login", http.StatusFound)
 }
 
-func user_do_login(w http.ResponseWriter,req *http.Request){
+func userDoLogin(w http.ResponseWriter,req *http.Request){
 	req.ParseForm()
 	var sessionID = sessionMgr.StartSession(w, req)
 	UserName := req.Form.Get("user_name")
@@ -72,7 +71,7 @@ func user_do_login(w http.ResponseWriter,req *http.Request){
 }
 
 
-func user_update(w http.ResponseWriter,req *http.Request){
+func userUpdate(w http.ResponseWriter,req *http.Request){
 	req.ParseForm()
 	UserName := req.Form.Get("user_name")
 	UserPwd := req.Form.Get("password")
@@ -90,7 +89,7 @@ func user_update(w http.ResponseWriter,req *http.Request){
 	return
 }
 
-func update_user_controller(w http.ResponseWriter,req *http.Request){
+func updateUserController(w http.ResponseWriter,req *http.Request){
 	req.ParseForm()
 	UserName := req.Form.Get("user_name")
 	UserPwd := req.Form.Get("password")
@@ -108,7 +107,7 @@ func update_user_controller(w http.ResponseWriter,req *http.Request){
 	return
 }
 
-func del_user_controller(w http.ResponseWriter,req *http.Request){
+func delUserController(w http.ResponseWriter,req *http.Request){
 	req.ParseForm()
 	UserName := req.Form.Get("user_name")
 	if UserName == ""{
@@ -124,7 +123,7 @@ func del_user_controller(w http.ResponseWriter,req *http.Request){
 	return
 }
 
-func list_user_controller(w http.ResponseWriter,req *http.Request){
+func listUserController(w http.ResponseWriter,req *http.Request){
 	req.ParseForm()
 	UserList := user.GetUserList()
 
@@ -143,9 +142,7 @@ func list_user_controller(w http.ResponseWriter,req *http.Request){
 		TemplateHeader
 		UserList []user.UserInfo
 	}
-
-
-
+	
 	UserListInfo := UserListStruct{UserList:UserList}
 	UserListInfo.Title = "UserList-Bifrost"
 	t, _ := template.ParseFiles(TemplatePath("manager/template/user.list.html"),TemplatePath("manager/template/header.html"),TemplatePath("manager/template/footer.html"))
