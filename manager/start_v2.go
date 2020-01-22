@@ -1,13 +1,14 @@
 package manager
 
 import (
-    "fmt"
     "github.com/brokercap/Bifrost/config"
     "github.com/brokercap/Bifrost/manager/v2/controllers"
+    "github.com/brokercap/Bifrost/manager/v2/datamodles"
     "github.com/kataras/iris/v12"
     "github.com/kataras/iris/v12/context"
     "github.com/kataras/iris/v12/mvc"
     "github.com/kataras/iris/v12/sessions"
+    "net/http"
     "time"
 )
 
@@ -23,7 +24,7 @@ var (
 func StartV2(endpoint string) {
     app := irisInit()
     // 加载路由
-    loadRout(app)
+    loadRoute(app)
     // 启动
     startApp(app, endpoint)
 }
@@ -34,6 +35,11 @@ func irisInit() *iris.Application {
     app.RegisterView(iris.HTML("./manager/template", ".html"))
     app.HandleDir("/", "./manager/public")
     app.HandleDir("/plugin", "./")
+    app.OnAnyErrorCode(func(ctx iris.Context) {
+        ctx.ViewData("Message", ctx.Values().
+            GetStringDefault("message", "The page you're looking for doesn't exist"))
+        ctx.View("shared/error.html")
+    })
     // 错误处理
     app.OnErrorCode(iris.StatusNotFound, func(ctx context.Context) {
         //_ = ctx.View("404.html")
@@ -58,24 +64,47 @@ func startApp(app *iris.Application, endpoint string) {
     }
 }
 
-func loadRout(app *iris.Application) {
+func loadRoute(app *iris.Application) {
     //app.Get("/login", controllers.UserLogin)
-    app.Get("/logout", controllers.UserLogout)
-    app.Post("/dologin", controllers.UserDoLogin)
-    app.UseGlobal(func(c context.Context) {
-        fmt.Println("-----------")
-        c.Next()
+    //app.Get("/logout", controllers.UserLogout)
+    //app.Post("/dologin", controllers.UserDoLogin)
+    app.Use(func(c context.Context) {
+        authed(c)
     })
-    mvc.New(app.Party("/")).Register(sessionMgr).Handle(new(controllers.UserController))
-    mvc.New(app.Party("/login")).Register(sessionMgr).Handle(new(controllers.UserController))
-    mvc.New(app.Party("/login")).Register(sessionMgr).Handle(new(controllers.UserController))
-    
-    mvc.Configure(app.Party("/"), )
+    mvc.New(app.Party("/")).Register(sessManager.Start).Handle(new(controllers.RootController))
     mvc.Configure(app.Party("/user"), userRoute)
 }
 
+func authed(c context.Context) bool {
+    if c.GetHeader("Authorization") != "" {
+        username, password, ok := c.Request().BasicAuth()
+        if !ok || username == "" {
+            c.JSON(datamodles.GenFailedMsg("Author error"))
+            return false
+        }
+        targetPwd := config.GetConfigVal("user", username)
+        if targetPwd != password {
+            c.JSON(datamodles.GenFailedMsg("password error"))
+            return false
+        }
+        groupName := config.GetConfigVal("groups", username)
+        if groupName != "administrator" && checkWriteRequest(c.FullRequestURI()){
+            c.JSON(datamodles.GenFailedMsg("user group : [ " + groupName + " ] no authority"))
+            return false
+        }
+    } else {
+        //username := sessManager.Start(c).GetString("userId")
+        
+    }
+    return true
+}
+
+func basicAuthorV2(writer context.ResponseWriter, request *http.Request) bool {
+
+}
+
 func userRoute(app *mvc.Application) {
+    app.Router.Get("/list", controllers.ListUserController)
     app.Router.Put("/update", controllers.UpdateUserController)
     app.Router.Delete("/del", controllers.DelUserController)
-    app.Router.Get("/list", controllers.ListUserController)
 }

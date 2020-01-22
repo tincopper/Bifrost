@@ -51,7 +51,7 @@ func userDoLogin(w http.ResponseWriter,req *http.Request){
 	UserPwd := req.Form.Get("password")
 
 	if UserName == ""{
-		w.Write(returnResult(false," user no exsit"))
+		w.Write(returnResult(false," user no exist"))
 		return
 	}
 
