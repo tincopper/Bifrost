@@ -16,28 +16,25 @@ limitations under the License.
 package main
 
 import (
-	"log"
-	"github.com/brokercap/Bifrost/plugin"
-	"github.com/brokercap/Bifrost/manager"
-	"github.com/brokercap/Bifrost/config"
 	"flag"
+	"fmt"
+	"github.com/brokercap/Bifrost/config"
+	"github.com/brokercap/Bifrost/manager"
+	"github.com/brokercap/Bifrost/plugin"
+	"github.com/brokercap/Bifrost/server"
+	"io"
+	"io/ioutil"
+	"log"
 	"os"
 	"os/signal"
-	"syscall"
-	"time"
-	"io"
-	"sync"
-	"io/ioutil"
-	"fmt"
-	"strings"
 	"path/filepath"
 	"runtime"
 	"runtime/debug"
-	"github.com/brokercap/Bifrost/server"
 	"strconv"
+	"strings"
+	"syscall"
+	"time"
 )
-
-var l sync.Mutex
 
 var logo = `
 ___         ___                   _   
@@ -173,7 +170,7 @@ func main() {
 
 	doRecovery()
 
-	go manager.Start(IpAndPort)
+	go manager.StartV2(IpAndPort)
 	ListenSignal()
 }
 

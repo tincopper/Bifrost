@@ -42,8 +42,6 @@ func LoadConf(conffile string) map[string]map[string]string {
 			if err != io.EOF {
 				fmt.Println("config file isn't exsit or file is nothing!")
 				os.Exit(1)
-				panic(err)
-				break
 			} else {
 				break
 			}

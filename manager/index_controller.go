@@ -5,7 +5,7 @@ import (
 	"html/template"
 	"github.com/brokercap/Bifrost/server"
 	"github.com/brokercap/Bifrost/plugin/driver"
-	pluginStorage "github.com/brokercap/Bifrost/plugin/storage"
+	"github.com/brokercap/Bifrost/plugin/storage"
 	"encoding/json"
 	"runtime"
 	"github.com/brokercap/Bifrost/config"
@@ -56,7 +56,7 @@ func overview_controller(w http.ResponseWriter,req *http.Request){
 
 	PluginCount := len(driver.Drivers())
 
-	ToServerCount := len(pluginStorage.GetToServerMap())
+	ToServerCount := len(storage.GetToServerMap())
 
 	data = OverView{
 		DbCount:				DbCount,
