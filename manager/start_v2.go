@@ -1,3 +1,18 @@
+/*
+Copyright [2018] [jc3wish]
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 package manager
 
 import (
@@ -43,10 +58,18 @@ func irisInit() *iris.Application {
     // 错误处理
     app.OnErrorCode(iris.StatusNotFound, func(ctx context.Context) {
         //_ = ctx.View("404.html")
-        _, _ = ctx.HTML(ctx.FullRequestURI() + "<h1>404</h1>")
+        _, _ = ctx.HTML(ctx.Method() + " " + ctx.FullRequestURI() + "<h1>404</h1>")
     })
     app.OnErrorCode(iris.StatusInternalServerError, func(ctx context.Context) {
         _ = ctx.View("index.html")
+    })
+    // 权限处理
+    app.Use(func(c context.Context) {
+        if checkPermission(c) {
+            c.Next()
+        } else {
+            c.StopExecution()
+        }
     })
     return app
 }
@@ -65,19 +88,18 @@ func startApp(app *iris.Application, endpoint string) {
 }
 
 func loadRoute(app *iris.Application) {
-    app.Use(func(c context.Context) {
-        if authed(c) {
-            c.Next()
-        } else {
-            c.StopExecution()
-        }
-    })
     mvc.New(app.Party("/")).Register(sessManager.Start, startTime).Handle(new(controllers.RootController))
     mvc.Configure(app.Party("/user")).Handle(new(controllers.UserController))
     mvc.Configure(app.Party("/flow")).Handle(new(controllers.FlowController))
+    mvc.Configure(app.Party("/db"), controllers.DbController)
+    mvc.Configure(app.Party("/backup"), controllers.BackupController)
+    mvc.Configure(app.Party("/channel"), controllers.ChannelController)
+    mvc.Configure(app.Party("/history"), controllers.HistoryController)
+    mvc.Configure(app.Party("/plugin"), controllers.PluginController)
+    mvc.Configure(app.Party("/table"), controllers.TableController)
 }
 
-func authed(c context.Context) bool {
+func checkPermission(c context.Context) bool {
     if c.GetHeader("Authorization") != "" {
         username, password, ok := c.Request().BasicAuth()
         if !ok || username == "" {
@@ -118,9 +140,3 @@ func checkAuthority(groupName string, c context.Context) bool {
     }
     return true
 }
-
-/*func userRoute(app *mvc.Application) {
-    app.Router.Get("/list", controllers.ListUserController)
-    app.Router.Put("/update", controllers.UpdateUserController)
-    app.Router.Delete("/del", controllers.DelUserController)
-}*/
